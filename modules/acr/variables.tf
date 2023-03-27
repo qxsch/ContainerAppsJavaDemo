@@ -24,13 +24,3 @@ variable "acr_admin_enabled" {
   type        = bool
   default     = false
 }
-
-variable "acr_georeplications" {
-  description = "A list of georeplication locations for the Azure Container Registry"
-  type = list(object({
-    location                = string
-    zone_redundancy_enabled = bool
-    tags                    = map(string)
-  }))
-  default = []
-}
