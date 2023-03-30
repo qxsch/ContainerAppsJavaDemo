@@ -60,3 +60,10 @@ variable "container_memory" {
   description = "Container memory requirements"
   type        = string
 }
+
+variable "storage_accounts" {
+  type = list(object({
+    name                = string
+  }))
+  default = []
+}
