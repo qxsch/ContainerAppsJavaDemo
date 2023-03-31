@@ -79,7 +79,14 @@ variable "container_memory" {
   type        = string
 }
 
-variable "storage_accounts" {
+variable "linked_storage_accounts" {
+  type = list(object({
+    name                = string
+  }))
+  default = []
+}
+
+variable "dapr_storage_accounts" {
   type = list(object({
     name                = string
   }))
@@ -118,4 +125,16 @@ variable "user_assigned_identity_name" {
   description = "Name of the user assigned identity"
   type        = string
   default     = ""
+}
+
+variable "min_replicas" {
+  description = "Minimum number of replicas"
+  type        = number
+  default     = 1
+}
+
+variable "max_replicas" {
+  description = "Maximum number of replicas"
+  type        = number
+  default     = 1
 }
