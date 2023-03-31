@@ -1,16 +1,19 @@
 variable "resource_group_name" {
   description = "Name of the resource group"
   type        = string
+  default     = ""
 }
 
 variable "location" {
   description = "Azure location of the resource group"
   type        = string
+  default     = "switzerlandnorth"
 }
 
 variable "log_analytics_workspace_name" {
   description = "Name of the log analytics workspace"
   type        = string
+  default     = ""
 }
 
 variable "log_analytics_workspace_sku" {
@@ -28,11 +31,24 @@ variable "log_analytics_workspace_retention_in_days" {
 variable "environment_name" {
   description = "Name of the container app environment"
   type        = string
+  default     = ""
+}
+
+variable "environment" {
+  description = "Type of environment (i.e. dev, test, prod)"
+  type        = string
+  default     = ""
 }
 
 variable "app_name" {
+  description = "Name of the app"
+  type        = string
+}
+
+variable "container_app_name" {
   description = "Name of the container app"
   type        = string
+  default     = ""
 }
 
 variable "revision_mode" {
@@ -44,11 +60,13 @@ variable "revision_mode" {
 variable "container_name" {
   description = "Name of the container"
   type        = string
+  default     = ""
 }
 
 variable "container_image" {
   description = "Container image"
   type        = string
+  default     = ""
 }
 
 variable "container_cpu" {
@@ -66,4 +84,38 @@ variable "storage_accounts" {
     name                = string
   }))
   default = []
+}
+
+variable "container_registry_name" {
+  description = "The name of the Azure Container Registry"
+  type        = string
+}
+
+variable "container_registry_rg" {
+  description = "The name of the Azure Container Registry"
+  type        = string
+}
+
+variable "container_port" {
+  description = "The port to expose on the container"
+  type        = number
+  default     = 8080
+}
+
+variable "container_tag" {
+  description = "The tag of the container image"
+  type        = string
+  default     = "latest"
+}
+
+variable "container_ingress_external_enabled" {
+  description = "Enable external ingress for the container app"
+  type        = bool
+  default     = false
+}
+
+variable "user_assigned_identity_name" {
+  description = "Name of the user assigned identity"
+  type        = string
+  default     = ""
 }
