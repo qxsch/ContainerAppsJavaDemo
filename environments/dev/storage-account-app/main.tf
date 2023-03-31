@@ -10,9 +10,15 @@ module "container_app" {
   container_registry_name             = "devacrshared1"
   container_registry_rg               = "rg-dev-aca-shared"
 
-  storage_accounts = [
+  #linked_storage_accounts = [
+  #  {
+  #    name                = "pocacademodevstorage1"
+  #  }
+  #]
+
+  dapr_storage_accounts = [
     {
-      name                = "pocacademodevstorage1"
+      name                = "pocacademodevstorage2"
     }
   ]
 }
