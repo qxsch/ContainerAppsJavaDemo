@@ -1,0 +1,45 @@
+name: Build and Push Docker Images to Container Registry
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+env:
+  IMAGE_NAME: storage-account-app
+  REGISTRY_NAME: devacrshared1.azurecr.io
+  TAG_NAME: latest
+
+jobs:
+
+  build-and-push:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2.7.0
+
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@v2.1.0
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v2.5.0
+
+    - name: Login to Container Registry
+      uses: docker/login-action@v2.1.0
+      with:
+        registry: ${{ env.REGISTRY_NAME }}
+        username: ${{ secrets.REGISTRY_USERNAME }}
+        password: ${{ secrets.REGISTRY_PASSWORD }}
+
+    - name: Build and push Docker image
+      uses: docker/build-push-action@v4.0.0
+
+      with:
+        context: ./apps/storage-account-app/
+        push: true
+        tags: ${{ env.REGISTRY_NAME }}/${{ env.IMAGE_NAME }}:${{ env.TAG_NAME }}
+
+    - name: Logout of Container Registry
+      run: docker logout ${{ env.REGISTRY_NAME }}
