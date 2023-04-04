@@ -6,33 +6,40 @@ on:
   pull_request:
     branches: [ "main" ]
 
+env:
+  IMAGE_NAME: storage-account-app
+  REGISTRY_NAME: devacrshared1.azurecr.io
+  TAG_NAME: latest
+
 jobs:
+
   build-and-push:
+
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2.7.0
+    - uses: actions/checkout@v2
 
     - name: Set up QEMU
-      uses: docker/setup-qemu-action@v2.1.0
+      uses: docker/setup-qemu-action@v1
 
     - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v2.5.0
+      uses: docker/setup-buildx-action@v1
 
     - name: Login to Container Registry
-      uses: docker/login-action@v2.1.0
+      uses: docker/login-action@v1
       with:
         registry: ${{ env.REGISTRY_NAME }}
         username: ${{ secrets.REGISTRY_USERNAME }}
         password: ${{ secrets.REGISTRY_PASSWORD }}
 
     - name: Build and push Docker image
-      uses: docker/build-push-action@v4.0.0
-
+      uses: docker/build-push-action@v2
       with:
-        context: ./apps/storage-account-app/
+        context: ContainerAppsJavaDemo/apps/storage-account-app/
         push: true
-        tags: ${{ env.REGISTRY_NAME }}/${{ env.SA_IMAGE_NAME }}:${{ env.TAG_NAME }}
+        tags: ${{ env.REGISTRY_NAME }}/${{ env.IMAGE_NAME }}:${{ env.TAG_NAME }}
+        file: ContainerAppsJavaDemo/apps/storage-account-app/Dockerfile
 
     - name: Logout of Container Registry
-      run: docker logout ${{ env.REGISTRY_NAME }}
+      uses: docker/logout-action@v1
