@@ -32,14 +32,14 @@ public class BlobStorageServiceConnectionController {
     }
 
     @PostMapping("/upload")
-    @Operation(summary = "Upload data to Service Connections", description = "Upload UTF8 string data to a blob storage service connections")
+    @Operation(summary = "Upload data to Service Connection", description = "Upload UTF8 string data to a blob storage service connection")
     @ResponseStatus(HttpStatus.OK)
     public boolean uploadStringToServiceConnection(@RequestBody ServiceConnectionUploadBodyDefinition destination) {
         return new AzureSDKStorage().setEnvironmentName(destination.serviceConnectionName).uploadFile(destination.containerName, destination.blobName, destination.blobContent);
     }
 
     @PostMapping("/download")
-    @Operation(summary = "Download data from Service Connections", description = "Upload UTF8 string data to a blob storage service connections")
+    @Operation(summary = "Download data from Service Connection", description = "Upload UTF8 string data to a blob storage service connection")
     @ResponseStatus(HttpStatus.OK)
     public String downloadStringFromServiceConnection(@RequestBody ServiceConnectionDownloadBodyDefinition destination) {
         return new AzureSDKStorage().setEnvironmentName(destination.serviceConnectionName).downloadFile(destination.containerName, destination.blobName);
