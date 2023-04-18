@@ -1,6 +1,5 @@
 package containerapps.demo;
 
-import java.util.*;
 import java.util.logging.Logger;
 import io.dapr.client.DaprClient;
 import io.dapr.client.DaprClientBuilder;

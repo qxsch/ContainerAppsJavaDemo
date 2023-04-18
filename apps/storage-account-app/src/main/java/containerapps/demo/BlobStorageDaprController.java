@@ -13,8 +13,6 @@ import org.springframework.http.HttpStatus;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
-import io.dapr.client.DaprClient;
-import io.dapr.client.DaprClientBuilder;
 
 @RestController
 @Tag(name = "Blob Storage DAPR Integration", description = "Blob Storage DAPR Integration API")
