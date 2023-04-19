@@ -9,7 +9,7 @@
 *.nar
 *.bz2
 *.ser
-*.properties
+# *.properties
 *.swp
 *.bak
 *.class
