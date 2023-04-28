@@ -12,13 +12,13 @@ module "container_app" {
 
   linked_storage_accounts = [
     {
-      name                = "acstrgaccountlinked001"
+      name                = "acatestlinkedaccount001"
     }
   ]
 
    dapr_storage_accounts = [
     {
-      name                = "acastrgaccountdapr001"
+      name                = "acatestdapraccount001"
     }
   ]
 
