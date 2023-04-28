@@ -39,13 +39,18 @@ resource "azurerm_container_app" "container_app" {
   }
 
   identity {
-    type = "UserAssigned"
-    identity_ids = [azurerm_user_assigned_identity.container_app_identity.id]
+    type = "SystemAssigned"
   }
-  
+
+  secret {
+    name  = "pull-secret"
+    value = data.azurerm_container_registry.acr.admin_password 
+  }
+
   registry {
-    server   = data.azurerm_container_registry.acr.login_server
-    identity = azurerm_user_assigned_identity.container_app_identity.id
+    server               = data.azurerm_container_registry.acr.login_server
+    username             = data.azurerm_container_registry.acr.admin_username 
+    password_secret_name = "pull-secret"
   }
 
   template {
@@ -78,12 +83,10 @@ resource "azapi_resource" "storage_blob" {
       clientType = "java"
       targetService = {
         type = "AzureResource"
-        id = azurerm_storage_account.linked[each.key].id
+        id = "${azurerm_storage_account.linked[each.key].id}/blobServices/default"
       }
       authInfo = {
-        authType = "userAssignedIdentity"
-        clientId = azurerm_user_assigned_identity.container_app_identity.client_id
-        subscriptionId = data.azurerm_subscription.current.subscription_id
+        authType = "systemAssignedIdentity"
         roles = []
       }
       scope = "container-dev-storage-account-app"
@@ -99,7 +102,7 @@ resource "azapi_resource" "storage_blob" {
     }
   })
 
-  depends_on = [azurerm_container_app.container_app, azurerm_storage_account.linked, azurerm_storage_account.dapr, azurerm_role_assignment.acr_pull, azurerm_user_assigned_identity.container_app_identity]
+  depends_on = [azurerm_container_app.container_app, azurerm_storage_account.linked, azurerm_storage_account.dapr]
 }
 
 resource "azurerm_storage_account" "linked" {
@@ -114,6 +117,15 @@ resource "azurerm_storage_account" "linked" {
   tags = {
     environment = "dev"
   }
+}
+
+resource "azurerm_storage_container" "default_linked" {
+  for_each              = azurerm_storage_account.linked
+  name                  = "default"
+  storage_account_name  = each.value.name
+  container_access_type = "private"
+
+  depends_on = [azurerm_storage_account.linked]
 }
 
 resource "azurerm_storage_account" "dapr" {
@@ -173,15 +185,3 @@ resource "azurerm_container_app_environment_dapr_component" "dapr_component" {
   depends_on = [azurerm_container_app_environment.container_app_env, azurerm_storage_account.dapr, azurerm_storage_container.default]
 }
                                      
-# These are the resources that require "Owner" rights - We may need to refactor these in the future.
-resource "azurerm_role_assignment" "acr_pull" {
-  principal_id = azurerm_user_assigned_identity.container_app_identity.principal_id
-  role_definition_name = "AcrPull"
-  scope          = data.azurerm_container_registry.acr.id
-}
-
-resource "azurerm_user_assigned_identity" "container_app_identity" {
-  name                = coalesce(var.user_assigned_identity_name, local.default_user_assigned_identity_name)
-  resource_group_name = azurerm_resource_group.container_app_rg.name
-  location            = azurerm_resource_group.container_app_rg.location
-}
