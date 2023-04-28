@@ -4,11 +4,11 @@ This demo aims to be a paved road for anyone who would like to start using ACA w
 
 ## Repository Structure
 
-- `.github/workflows/build-and-push-docker-image.yml`: The pipeline for Docker build
-- `.github/workflows/deploy.yml`: The deploy pipeline (still in development)
-- `apps/storage-account-app`: A sample Java-based Spring Boot demo application
-- `modules`: Directory containing Terraform modules for deploying the application
-- `environments`: Directory containing concrete usage of the modules for different environments (only dev for the demo scope)
+- `/.github/workflows/build-and-push-docker-image.yml`: The pipeline for Docker build
+- `/.github/workflows/deploy.yml`: The deploy pipeline (still in development)
+- `/apps/storage-account-app`: A sample Java-based Spring Boot demo application
+- `/modules`: Directory containing Terraform modules for deploying the application
+- `/environments`: Directory containing concrete usage of the modules for different environments (only dev for the demo scope)
 
 ## Terraform
 
