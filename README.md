@@ -42,3 +42,14 @@ The `/apps/storage-account-app` is a Spring Boot application that exposes APIs f
 
 - `POST /api/dapr/blobstorage/upload`: Upload a UTF-8 string data to a blob storage Dapr state integration.
 - `POST /api/dapr/blobstorage/download`: Download a UTF-8 string data from a blob storage Dapr state integration.
+
+
+## Pipeline Config
+
+The following secrets are required to run the pipeline:
+```
+AZURE_CLIENT_ID=
+AZURE_CLIENT_SECRET=
+AZURE_TENANT_ID=
+AZURE_SUBSCRIPTION_ID=
+```
