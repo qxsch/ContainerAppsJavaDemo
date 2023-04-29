@@ -1,9 +1,7 @@
 name: Deploy with Terraform
 
 on:
-  push:
-    branches:
-      - main
+  workflow_dispatch:
 
 env:
   TF_WORKING_DIR: environments/dev/storage-account-app
