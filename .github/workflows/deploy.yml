@@ -24,7 +24,8 @@ jobs:
         AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
     - name: Initialize Terraform
-      run: terraform init ${{ env.TF_WORKING_DIR }}
+      working-directory: ${{ env.TF_WORKING_DIR }}
+      run: terraform init 
       env:
         ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
         ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
@@ -32,17 +33,19 @@ jobs:
         ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
 
     - name: Validate Terraform configuration
-      run: terraform validate ${{ env.TF_WORKING_DIR }}
+      working-directory: ${{ env.TF_WORKING_DIR }}
+      run: terraform validate
 
     - name: Plan Terraform deployment
-      run: terraform plan -out=tfplan ${{ env.TF_WORKING_DIR }}
+      working-directory: ${{ env.TF_WORKING_DIR }}
+      run: terraform plan -out=tfplan
       id: plan
 
     - name: Upload Terraform plan as artifact
       uses: actions/upload-artifact@v2
       with:
         name: tfplan
-        path: tfplan
+        path: "${{ env.TF_WORKING_DIR }}/tfplan"
 
     - name: Add comment with Terraform plan
       uses: actions/github-script@v5
