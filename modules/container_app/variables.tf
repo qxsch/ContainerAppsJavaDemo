@@ -130,11 +130,17 @@ variable "user_assigned_identity_name" {
 variable "min_replicas" {
   description = "Minimum number of replicas"
   type        = number
-  default     = 1
+  default     = 0
 }
 
 variable "max_replicas" {
   description = "Maximum number of replicas"
   type        = number
   default     = 1
+}
+
+variable "enable_http_autoscaling" {
+  description = "Enable HTTP autoscaling"
+  type        = bool
+  default     = true
 }
