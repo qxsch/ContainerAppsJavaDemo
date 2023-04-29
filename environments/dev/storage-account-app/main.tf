@@ -21,5 +21,4 @@ module "container_app" {
       name                = "acatestdapraccount001"
     }
   ]
-
 }
