@@ -69,6 +69,44 @@ resource "azurerm_container_app" "container_app" {
   }
 }
 
+resource "azapi_update_resource" "autoscale" {
+  count = var.enable_http_autoscaling ? 1 : 0
+
+  type = "Microsoft.App/containerApps@2022-10-01"
+  resource_id = azurerm_container_app.container_app.id
+  body = jsonencode({
+    properties = {
+      configuration = {
+        secrets = [
+          {
+            name = "pull-secret"
+            value = data.azurerm_container_registry.acr.admin_password
+          }
+        ]
+        
+      },
+      template = {
+        scale = {
+          min_replicas = var.min_replicas
+          max_replicas = var.max_replicas
+          rules = [
+                {
+                    name: "autoscale",
+                    http: {
+                        metadata: {
+                            concurrentRequests: "10"
+                        }
+                    }
+                }
+            ]
+        }
+      }
+    }
+  })
+
+  depends_on = [azurerm_container_app.container_app]
+}
+
 # There is a known limitation here that if multiple links are created, there might be an error during exeuction
 # Potential fix can be found here: https://stackoverflow.com/questions/70049758/terraform-for-each-one-by-one
 resource "azapi_resource" "storage_blob" {
@@ -102,7 +140,7 @@ resource "azapi_resource" "storage_blob" {
     }
   })
 
-  depends_on = [azurerm_container_app.container_app, azurerm_storage_account.linked, azurerm_storage_account.dapr]
+  depends_on = [azurerm_container_app.container_app, azurerm_storage_account.linked, azurerm_storage_account.dapr, azapi_update_resource.autoscale]
 }
 
 resource "azurerm_storage_account" "linked" {
