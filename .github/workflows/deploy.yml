@@ -8,7 +8,7 @@ on:
 
 env:
   TF_WORKING_DIR: environments/dev/storage-account-app
-  STORAGE_ACCOUNT_NAME: tfstrgaccountaca
+  STORAGE_ACCOUNT_NAME: tfstrgaccaca
   STORAGE_CONTAINER_NAME: tfstate
   STORAGE_ACCOUNT_RG: tfstrgaccount-rg
   
