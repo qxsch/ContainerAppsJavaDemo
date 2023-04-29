@@ -5,8 +5,11 @@ on:
     branches:
       - main
 
+env:
+  TF_WORKING_DIR: ContainerAppsJavaDemo/environments/dev/storage-account-app
+
 jobs:
-  deploy:
+  plan:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout repository
@@ -16,17 +19,62 @@ jobs:
       uses: hashicorp/setup-terraform@v1
       with:
         terraform_version: 1.0.0
-        
+
     - name: Login to Azure
       run: az login --service-principal -u ${{ secrets.AZURE_CLIENT_ID }} -p ${{ secrets.AZURE_CLIENT_SECRET }} --tenant ${{ secrets.AZURE_TENANT_ID }}
       env:
         AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
     - name: Initialize Terraform
-      run: terraform init ContainerAppsJavaDemo/environments/dev/storage-account-app
+      run: terraform init ${{ env.TF_WORKING_DIR }}
+      env:
+        ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+        ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+        ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+        ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
 
     - name: Validate Terraform configuration
-      run: terraform validate ContainerAppsJavaDemo/environments/dev/storage-account-app
+      run: terraform validate ${{ env.TF_WORKING_DIR }}
 
     - name: Plan Terraform deployment
-      run: terraform plan -out=tfplan ContainerAppsJavaDemo/environments/dev/storage-account-app
+      run: terraform plan -out=tfplan ${{ env.TF_WORKING_DIR }}
+      id: plan
+
+    - name: Upload Terraform plan as artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: tfplan
+        path: tfplan
+
+    - name: Add comment with Terraform plan
+      uses: actions/github-script@v5
+      with:
+        script: |
+          const output = `#### Terraform Plan:\n\`\`\`${{ steps.plan.outputs.stdout }}\`\`\`\n*Pusher: @${{ github.actor }}*`;
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: output,
+          });
+
+  apply:
+    needs: plan
+    runs-on: ubuntu-latest
+    if: github.event.review.state == 'approved'
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v1
+      with:
+        terraform_version: 1.0.0
+
+    - name: Download Terraform plan artifact
+      uses: actions/download-artifact@v2
+      with:
+        name: tfplan
+
+    - name: Apply Terraform changes
+      run: terraform apply -auto-approve -input=false tfplan
