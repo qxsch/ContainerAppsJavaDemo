@@ -6,7 +6,7 @@ on:
       - main
 
 env:
-  TF_WORKING_DIR: ContainerAppsJavaDemo/environments/dev/storage-account-app
+  TF_WORKING_DIR: environments/dev/storage-account-app
 
 jobs:
   plan:
