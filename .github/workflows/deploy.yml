@@ -1,0 +1,145 @@
+name: Deploy with Terraform
+
+on:
+  pull_request:
+    types:
+      - opened
+      - synchronize
+
+env:
+  TF_WORKING_DIR: environments/dev/storage-account-app
+  STORAGE_ACCOUNT_NAME: tfstrgaccaca
+  STORAGE_CONTAINER_NAME: tfstate
+  STORAGE_ACCOUNT_RG: tfstrgaccount-rg
+  
+jobs:
+  plan:
+    permissions: write-all
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v1
+      with:
+        terraform_version: 1.3.7
+
+    - name: Login to Azure
+      run: az login --service-principal -u ${{ secrets.AZURE_CLIENT_ID }} -p ${{ secrets.AZURE_CLIENT_SECRET }} --tenant ${{ secrets.AZURE_TENANT_ID }}
+      env:
+        AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+        
+    - name: Create Storage Account and Container if not exist
+      run: |
+        RESOURCE_GROUP_NAME=${{ env.STORAGE_ACCOUNT_RG }}
+        STORAGE_ACCOUNT_NAME=${{ env.STORAGE_ACCOUNT_NAME }}
+        CONTAINER_NAME=${{ env.STORAGE_CONTAINER_NAME }}
+
+        az group create --name $RESOURCE_GROUP_NAME --location switzerlandnorth
+        az storage account create --resource-group $RESOURCE_GROUP_NAME --name $STORAGE_ACCOUNT_NAME --sku Standard_LRS --encryption-services blob
+        az storage container create --name $CONTAINER_NAME --account-name $STORAGE_ACCOUNT_NAME --auth-mode login
+        
+        cd $TF_WORKING_DIR
+        
+        cat <<EOT > backend.tf
+        terraform {
+          backend "azurerm" {
+            resource_group_name   = "$RESOURCE_GROUP_NAME"
+            storage_account_name  = "$STORAGE_ACCOUNT_NAME"
+            container_name        = "$STORAGE_CONTAINER_NAME"
+            key                   = "terraform.tfstate"
+          }
+        }
+        EOT
+          
+        cat backend.tf
+        
+    - name: Initialize Terraform
+      working-directory: ${{ env.TF_WORKING_DIR }}
+      run: terraform init
+      env:
+        ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+        ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+        ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+        ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+        
+
+    - name: Validate Terraform configuration
+      working-directory: ${{ env.TF_WORKING_DIR }}
+      run: terraform validate
+
+    - name: Plan Terraform deployment
+      working-directory: ${{ env.TF_WORKING_DIR }}
+      id: plan
+      run: terraform plan -no-color  -out=tfplan
+      env:
+        ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+        ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+        ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+        ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+        
+    - name: Add comment with Terraform plan
+      uses: actions/github-script@v5
+      with:
+        script: |
+          const output = `#### Terraform Plan:\n\`\`\`${{ steps.plan.outputs.stdout }}\`\`\`\n*Pusher: @${{ github.actor }}*`;
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: output,
+          });
+
+  apply:
+    needs: plan
+    runs-on: ubuntu-latest
+    if: github.event.review.state == 'approved'
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v1
+      with:
+        terraform_version: 1.3.7
+
+    - name: Login to Azure
+      run: az login --service-principal -u ${{ secrets.AZURE_CLIENT_ID }} -p ${{ secrets.AZURE_CLIENT_SECRET }} --tenant ${{ secrets.AZURE_TENANT_ID }}
+      env:
+        AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+        
+    - name: Setup backend.tf file
+      run: |
+        cd $TF_WORKING_DIR
+        
+        cat <<EOT > backend.tf
+        terraform {
+          backend "azurerm" {
+            resource_group_name   = "$RESOURCE_GROUP_NAME"
+            storage_account_name  = "$STORAGE_ACCOUNT_NAME"
+            container_name        = "$STORAGE_CONTAINER_NAME"
+            key                   = "terraform.tfstate"
+          }
+        }
+        EOT
+          
+        cat backend.tf
+          
+    - name: Initialize Terraform
+      working-directory: ${{ env.TF_WORKING_DIR }}
+      run: terraform init -backend-config="storage_account_name=${{ env.STORAGE_ACCOUNT_NAME }}" -backend-config="container_name=${{ env.STORAGE_CONTAINER_NAME }}" -backend-config="key=terraform.tfstate" -backend-config="resource_group_name=${{ env.STORAGE_ACCOUNT_RG }}" -backend-config="client_id=${{ secrets.AZURE_CLIENT_ID }}" -backend-config="client_secret=${{ secrets.AZURE_CLIENT_SECRET }}" -backend-config="tenant_id=${{ secrets.AZURE_TENANT_ID }}"
+      env:
+        ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+        ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+        ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+        ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+        
+    - name: Apply Terraform changes
+      working-directory: ${{ env.TF_WORKING_DIR }}
+      run: terraform apply -auto-approve -input=false 
+      env:
+        ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+        ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+        ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+        ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
