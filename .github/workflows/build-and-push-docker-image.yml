@@ -1,6 +1,7 @@
 name: Build and Push Docker Images to Container Registry
 
 on:
+  workflow_dispatch:
   push:
     branches: [ "main" ]
   pull_request:
