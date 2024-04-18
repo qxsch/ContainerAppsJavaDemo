@@ -96,7 +96,7 @@ jobs:
   apply:
     needs: plan
     runs-on: ubuntu-latest
-    if: github.event.review.state == 'approved'
+    
     steps:
     - name: Checkout repository
       uses: actions/checkout@v2
