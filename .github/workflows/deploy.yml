@@ -84,14 +84,15 @@ jobs:
       uses: actions/github-script@v5
       with:
         script: |
-          const output = `#### Terraform Plan:\n\`\`\`${{ steps.plan.outputs.stdout }}\`\`\`\n*Pusher: @${{ github.actor }}*`;
-          github.rest.issues.createComment({
-            issue_number: context.issue.number,
-            owner: context.repo.owner,
-            repo: context.repo.repo,
-            body: output,
-          });
-
+          if(context.issue.number) {
+            const output = `#### Terraform Plan:\n\`\`\`${{ steps.plan.outputs.stdout }}\`\`\`\n*Pusher: @${{ github.actor }}*`;
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: output,
+            });
+          }
   apply:
     needs: plan
     runs-on: ubuntu-latest
