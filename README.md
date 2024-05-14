@@ -38,6 +38,7 @@ The `/apps/storage-account-app` is a Spring Boot application that exposes APIs f
 - `POST /api/serviceconnections/blobstorage/download`: Download a UTF-8 string data from a blob storage service connection.
 - `GET /api/serviceconnections/blobstorage/`: List all configured service connections to blob storage.
 
+
 ### Blob Storage Dapr Integration API
 
 - `POST /api/dapr/blobstorage/upload`: Upload a UTF-8 string data to a blob storage Dapr state integration.
